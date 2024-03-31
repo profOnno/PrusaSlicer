@@ -1498,6 +1498,7 @@ void TabPrint::build()
         category_path = "infill_42#";
         optgroup = page->new_optgroup(L("Infill"));
         optgroup->append_single_option_line("fill_density", category_path + "fill-density");
+        optgroup->append_single_option_line("fill_multiline", category_path + "fill-multiline");
         optgroup->append_single_option_line("fill_pattern", category_path + "fill-pattern");
         optgroup->append_single_option_line("infill_anchor", category_path + "fill-pattern");
         optgroup->append_single_option_line("infill_anchor_max", category_path + "fill-pattern");

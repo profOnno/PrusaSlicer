@@ -1318,6 +1318,15 @@ void PrintConfigDef::init_fff_params()
     });
     def->set_default_value(new ConfigOptionPercent(20));
 
+    def = this->add("fill_multiline", coInt);
+    def->label = L("Fill Multiline");
+    def->full_label = L("Fill Multiline");
+    def->tooltip = L("Using multiple lines for the infill pattern, if supported by infill pattern");
+    //def->sidetext = L("°C");
+    def->max = 0;
+    def->max = 10; // TODO: What is a reasnable amount?
+    def->set_default_value(new ConfigOptionInt (1));
+
     def = this->add("fill_pattern", coEnum);
     def->label = L("Fill pattern");
     def->category = L("Infill");
