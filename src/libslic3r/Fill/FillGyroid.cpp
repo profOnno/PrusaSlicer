@@ -107,7 +107,7 @@ static std::vector<Vec2d> make_one_period(double width, double scaleFactor, doub
     return points;
 }
 
-static Polylines make_gyroid_waves(double gridZ, double density_adjusted, double line_spacing, double width, double height)
+static Polylines make_gyroid_waves(double gridZ, double density_adjusted, double line_spacing, double width, double height, double offset)
 {
     const double scaleFactor = scale_(line_spacing) / density_adjusted;
 
@@ -122,12 +122,12 @@ static Polylines make_gyroid_waves(double gridZ, double density_adjusted, double
     const double z_cos = cos(z);
 
     bool vertical = (std::abs(z_sin) <= std::abs(z_cos));
-    double lower_bound = 0.;
+    double lower_bound = 0. + offset;
     double upper_bound = height;
     bool flip = true;
     if (vertical) {
         flip = false;
-        lower_bound = -M_PI;
+        lower_bound = -M_PI + offset;
         upper_bound = width - M_PI_2;
         std::swap(width,height);
     }
@@ -173,13 +173,70 @@ void FillGyroid::_fill_surface_single(
     // align bounding box to a multiple of our grid module
     bb.merge(align_to_grid(bb.min, Point(2*M_PI*distance, 2*M_PI*distance)));
 
-    // generate pattern
-    Polylines polylines = make_gyroid_waves(
+    // Why do I need days to figure out how to get the param!???
+    /* const int N_LINES = params.multiline; */
+  
+    /* const int N_LINES = params.multiline; */
+    Polylines polylines;
+    double shift = 0.;
+    double sign = 1.;
+    double slow_step = 0;
+
+   // double nwidth = 0.65*0.2;  // only works for 5% 
+   // double nwidth = 0.65*0.4;  // only works for 10%
+   // 5 -> 0.2 -> 0.05 * 4 = 0.2
+   // 10 -> 0.4 -> 0.1 * 4 = 0.4
+    
+   // const double line_spacing    = sc    // even sequence
+
+   // even sequence
+   // -0.5, 0.5, -1.5, 1.5, -2.5, 2.5
+   
+   // uneven sequence
+   // 0, -1, 1, -2, 2, -3, 3
+    
+   // scale_(spacing) / params.density; seen elswere in code
+
+    /* double nwidth = 0.65 * params.density * 4.5; */
+    double nwidth = density_adjusted;
+  
+    //printf("density: %2.5f\n", params.density);
+    //printf("nwidth: %2.5f\n", nwidth);
+    //printf("this.density_adjusted: %2.5f\n", density_adjusted);
+    //printf("this.spacing: %2.5f\n", this->spacing);
+    //double nwidth = params.flow.width(); // only in surface params
+  
+    for (int i=0; i < params.multiline; i++) {
+
+      sign *= -1.;
+
+      shift = nwidth * -sign * slow_step;
+      if (params.multiline % 2 == 0) {
+        shift -= (nwidth * 0.5);
+      } 
+      // printf("shift: %2.5f\n", shift);
+
+      if (i % 2 == 0) {
+        slow_step += 1.;
+      };
+
+      // generate pattern
+      Polylines pl = make_gyroid_waves(
         scale_(this->z),
         density_adjusted,
         this->spacing,
         ceil(bb.size()(0) / distance) + 1.,
-        ceil(bb.size()(1) / distance) + 1.);
+        ceil(bb.size()(1) / distance) + 1.,
+        shift);
+
+    // The lines need to connect at the right point... so reverse this
+      if ( i % 2 > 0) {
+        reverse(pl.begin(), pl.end());
+        //std:reverse(pl.begin(), pl.end());
+      }
+      polylines.insert(polylines.end(), pl.begin(), pl.end());
+    }
+
 
 	// shift the polyline to the grid origin
 	for (Polyline &pl : polylines)

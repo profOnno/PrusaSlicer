@@ -52,6 +52,7 @@ struct SurfaceFillParams
 
     // FillParams
     float       	density = 0.f;
+    int       	multiline = 1;
     // Don't adjust spacing to fill the space evenly.
 //    bool        	dont_adjust = false;
     // Length of the infill anchor along the perimeter line.
@@ -86,6 +87,7 @@ struct SurfaceFillParams
 //		RETURN_COMPARE_NON_EQUAL(overlap);
 		RETURN_COMPARE_NON_EQUAL(angle);
 		RETURN_COMPARE_NON_EQUAL(density);
+		RETURN_COMPARE_NON_EQUAL(multiline); // TODO is this needed
 //		RETURN_COMPARE_NON_EQUAL_TYPED(unsigned, dont_adjust);
 		RETURN_COMPARE_NON_EQUAL(anchor_length);
 		RETURN_COMPARE_NON_EQUAL(anchor_length_max);
@@ -105,6 +107,7 @@ struct SurfaceFillParams
 				this->bridge   			== rhs.bridge   		&&
 //				this->bridge_angle 		== rhs.bridge_angle		&&
 				this->density   		== rhs.density   		&&
+				this->multiline   		== rhs.multiline   		&&
 //				this->dont_adjust   	== rhs.dont_adjust 		&&
 				this->anchor_length  	== rhs.anchor_length    &&
 				this->anchor_length_max == rhs.anchor_length_max &&
@@ -149,9 +152,11 @@ std::vector<SurfaceFill> group_fills(const Layer &layer)
 		        params.extruder 	 = layerm.region().extruder(extrusion_role);
 		        params.pattern 		 = region_config.fill_pattern.value;
 		        params.density       = float(region_config.fill_density);
+		        params.multiline       = int(region_config.fill_multiline);
 
 		        if (surface.is_solid()) {
 		            params.density = 100.f;
+		            //params.multiline = 1;
 					//FIXME for non-thick bridges, shall we allow a bottom surface pattern?
 		            params.pattern = (surface.is_external() && ! is_bridge) ? 
 						(surface.is_top() ? region_config.top_fill_pattern.value : region_config.bottom_fill_pattern.value) :
@@ -299,6 +304,7 @@ std::vector<SurfaceFill> group_fills(const Layer &layer)
 		        params.extruder 	 = layerm.region().extruder(frSolidInfill);
 	            params.pattern 		 = fill_type_monotonic(layerm.region().config().top_fill_pattern) ? ipMonotonic : ipRectilinear;
 	            params.density 		 = 100.f;
+	            //params.multiline 		 = 1;
 		        params.extrusion_role = ExtrusionRole::InternalInfill;
 		        params.angle 		= float(Geometry::deg2rad(layerm.region().config().fill_angle.value));
 		        // calculate the actual flow we'll be using for this infill
@@ -509,6 +515,7 @@ void Layer::make_fills(FillAdaptive::Octree* adaptive_fill_octree, FillAdaptive:
         // apply half spacing using this flow's own spacing and generate infill
         FillParams params;
         params.density           = float(0.01 * surface_fill.params.density);
+        params.multiline         = surface_fill.params.multiline;
         params.dont_adjust       = false; //  surface_fill.params.dont_adjust;
         params.anchor_length     = surface_fill.params.anchor_length;
         params.anchor_length_max = surface_fill.params.anchor_length_max;
@@ -527,6 +534,7 @@ void Layer::make_fills(FillAdaptive::Octree* adaptive_fill_octree, FillAdaptive:
                     thick_polylines = f->fill_surface_arachne(&surface_fill.surface, params);
                 else
 				    polylines = f->fill_surface(&surface_fill.surface, params);
+            // TODO: add the multiline here?
 			} catch (InfillFailedException &) {
 			}
             if (!polylines.empty() || !thick_polylines.empty()) {

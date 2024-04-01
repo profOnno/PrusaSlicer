@@ -74,6 +74,7 @@ void ConfigManipulation::update_print_fff_config(DynamicPrintConfig* config, con
     }
 
     double fill_density = config->option<ConfigOptionPercent>("fill_density")->value;
+    int fill_multiline = config->option<ConfigOptionInt>("fill_multiline")->value;
 
     if (config->opt_bool("spiral_vase") &&
         ! (config->opt_int("perimeters") == 1 && 

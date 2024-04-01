@@ -806,6 +806,7 @@ bool PrintObject::invalidate_state_by_config_options(
             }
         } else if (
                opt_key == "interface_shells"
+            || opt_key == "infill_multiline" // TODO: needed?
             || opt_key == "infill_only_where_needed"
             || opt_key == "infill_every_layers"
             || opt_key == "solid_infill_every_layers"
